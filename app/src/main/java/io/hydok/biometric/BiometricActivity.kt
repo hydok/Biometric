@@ -2,8 +2,6 @@ package io.hydok.biometric
 
 import android.app.Activity
 import android.content.Intent
-import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings.ACTION_BIOMETRIC_ENROLL
 import android.provider.Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED
@@ -11,6 +9,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
@@ -38,7 +37,8 @@ class BiometricActivity : AppCompatActivity() {
         promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle("생체 인증")
             .setSubtitle("인증해주세요.")
-            .setNegativeButtonText("취소")
+            //.setNegativeButtonText("취소")
+            .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
             .build()
 
 
@@ -75,25 +75,27 @@ class BiometricActivity : AppCompatActivity() {
         val textStatus: String
         val biometricManager = BiometricManager.from(this@BiometricActivity)
 
+        Log.d(TAG, "WEAK - ${biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK)}")
+
         when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK)) {
 
             //생체 인증 가능
             BiometricManager.BIOMETRIC_SUCCESS -> {
-                textStatus = "App can authenticate using biometrics."
+                textStatus = "OK"
                 biometricPrompt.authenticate(promptInfo) //인증 실행
             }
 
             //기기에서 생체 인증을 지원하지 않는 경우
             BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> textStatus =
-                "No biometric features available on this device."
+                "생체 인증을 지원하지 않는 기기"
 
             //현재 생체 인증을 사용할 수 없는 경우
             BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> textStatus =
-                "Biometric features are currently unavailable."
+                "생체 인증을 사용할 수 없음"
 
             //생체 인식 정보가 등록되어 있지 않은 경우
             BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
-                textStatus = "Prompts the user to create credentials that your app accepts."
+                textStatus = "생체 인식 정보가 없음"
 
                 val dialogBuilder = AlertDialog.Builder(this@BiometricActivity)
                 dialogBuilder
